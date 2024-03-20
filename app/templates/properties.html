@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block main %}
+<h2><b>Properties</b></h2>
+{% for name in name%}
+<div>
+    <div>
+        <img src="{{ url_for('files',filename=f)}}" class="img"/>
+        {{name.photo}}
+    </div>
+    <div>
+    <b>{{name.title}}</b>
+    </div>
+    <div>
+    {{name.location}}
+    </div>
+    <div>
+    {{name.price}}
+    </div>
+</div>
+{%endfor%}
+{% endblock %}

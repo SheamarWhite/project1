@@ -5,13 +5,20 @@ Werkzeug Documentation:  https://werkzeug.palletsprojects.com/
 This file contains the routes for your application.
 """
 
-from app import app
-from flask import render_template, request, redirect, url_for
+from app import app, db
+from flask import render_template, request, redirect, url_for, flash, send_from_directory
 
-
+from app import Flask
+from app.forms import PropertyForm
+import random
+from app.models import Property
+from werkzeug.utils import secure_filename
+import os
 ###
 # Routing for your application.
 ###
+
+
 
 @app.route('/')
 def home():
@@ -24,6 +31,50 @@ def about():
     """Render the website's about page."""
     return render_template('about.html', name="Mary Jane")
 
+@app.route('/create', methods=['GET', 'POST'])
+def create():
+    form = PropertyForm()
+
+    if form.validate_on_submit():
+        title = request.form['title']
+        numOfBeds = form.numOfBeds.data
+        numOfBaths = form.numOfBaths.data
+        location = form.location.data
+        price = form.price.data
+        type = form.type.data
+        description = form.description.data
+        photo = form.photo.data
+        filename = secure_filename(photo.filename)
+
+        f = form.photo.data
+        filename = secure_filename(f.filename)
+        f.save(os.path.join('uploads', filename))
+
+        House = Property(title=title, numOfBeds=numOfBeds, numOfBaths=numOfBaths, 
+                         location=location, price=price, type=type, description=description, 
+                         photo=filename)
+        if House is not None:
+            db.session.add(House)
+            db.session.commit()
+
+            flash('File Saved')
+            return render_template('properties.html')
+
+
+    return render_template('create.html', form=form)
+
+@app.route('/properties', methods=['GET', 'POST'])
+def properties():
+    name = db.session.query(Property).all()
+    root_dir = os.getcwd
+    img = send_from_directory(os.path.join(root_dir, app.config['UPLOAD_FOLDER']), filename)
+    for result in name:
+        return render_template('properties.html', name=name, filename=img)
+    return render_template('properties.html')
+
+@app.route('/propertyid')
+def propertyid():
+    return render_template('propertyid.html')
 
 ###
 # The functions below should be applicable to all Flask apps.
